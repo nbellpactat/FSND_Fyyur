@@ -1,3 +1,9 @@
+# Ignore jetbrains .idea/
+.idea/
+
+
+# Github generated Python .gitignore contents below
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
