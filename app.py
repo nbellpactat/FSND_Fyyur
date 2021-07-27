@@ -28,6 +28,7 @@ migrate = Migrate(app, db)
 # Models.
 #----------------------------------------------------------------------------#
 class Venue(db.Model):
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Venue'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -42,9 +43,9 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Artist'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -60,15 +61,22 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500))
 
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+class Show(db.Model):
+  __tablename__ = 'Show'
+
+  id = db.Column(db.Integer, primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'))
+  venue_name = db.Column(db.String)
+  artist_id = db.Column(db.Integer)
+  artist_name = db.Column(db.String)
+  artist_image_link = db.Column(db.String(500))
+  start_time = db.Column(db.DateTime)
+
 
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
-
-
 def format_datetime(value, format='medium'):
   date = dateutil.parser.parse(value)
   if format == 'full':
@@ -77,13 +85,13 @@ def format_datetime(value, format='medium'):
       format="EE MM, dd, y h:mma"
   return babel.dates.format_datetime(date, format, locale='en')
 
+
 app.jinja_env.filters['datetime'] = format_datetime
+
 
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
-
-
 @app.route('/')
 def index():
   return render_template('pages/home.html')
@@ -91,7 +99,6 @@ def index():
 
 #  Venues
 #  ----------------------------------------------------------------
-
 @app.route('/venues')
 def venues():
   # TODO: replace with real venues data.
