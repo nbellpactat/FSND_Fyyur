@@ -45,7 +45,6 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.String(120), nullable=False)
-    shows = db.relationship('Show', backref=db.backref('venue', lazy=True))
 
 
 class Artist(db.Model):
@@ -63,17 +62,17 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Show', backref=db.backref('artist', lazy=True))
 
 
 class Show(db.Model):
     __tablename__ = 'Show'
 
-    artist_id = db.Column(db.ForeignKey('Artist.id'), primary_key=True)
-    venue_id = db.Column(db.ForeignKey('Venue.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.ForeignKey('Artist.id'), nullable=False)
+    venue_id = db.Column(db.ForeignKey('Venue.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
-    venue = db.relationship("Venue", backref=db.backref("shows", lazy=True))
-    artist = db.relationship("Artist", backref=db.backref("shows", lazy=True))
+    artist = db.relationship('Artist', backref=db.backref('shows', lazy=True))
+    venue = db.relationship('Venue', backref=db.backref('shows', lazy=True))
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
@@ -648,30 +647,19 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
     error = False
     response = {}
     try:
-        # Create the Show
         form = ShowForm()
         show = Show(
             artist_id=form.artist_id.data,
             venue_id=form.venue_id.data,
             start_time=form.start_time.data
         )
-        # Commit the show to the DB to retrieve its ID
         db.session.add(show)
         db.session.commit()
-
-        artist = Artist().query.get(form.artist_id.data)
-        venue = Venue().query.get(form.venue_id.data)
-        artist.shows = [show]
-        venue.shows = [show]
-        db.session.add(artist, venue)
-        db.session.commit()
-
-        response['show_artist'] = artist.id
-        response['show_venue'] = venue.id
+        response['show_artist'] = form.artist_id.data
+        response['show_venue'] = form.venue_id.data
         response['show_start_time'] = show.start_time
     except:
         error = True
