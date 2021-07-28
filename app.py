@@ -3,7 +3,9 @@
 # ----------------------------------------------------------------------------#
 
 import json
-import sys
+import sys, os
+from datetime import datetime
+from collections import defaultdict
 
 import dateutil.parser
 import babel
@@ -105,62 +107,60 @@ def index():
 #  ----------------------------------------------------------------
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
     error = False
     data = []
+    upcoming_shows = defaultdict(int)
+    current_datetime = datetime.now()
     try:
+        # Retrieve a list of all the Venues
         venues_list = Venue().query.all()
 
-        # for i, venue in venues_list:
-        #     if data[i]['city'] == venue.city and data[i]['state'] == venue.state:
-        #         data[i]['venues'].append(
-        #             {'id': venue.id,
-        #              'name': venue.name,
-        #              'num_upcoming_shows':
-        #              }
-        #         )
-        #     else:
-        #         data[i]['city'] = venue.city
-        #         data[i]['state'] = venue.state
-        #         data[i]['venues'].append(
-        #             {'id': venue.id,
-        #              'name': venue.name,
-        #              'num_upcoming_shows':
-        #              }
-        #         )
+        # Define a list of location tuples
+        locations = []
+        for venue in venues_list:
+            locations.append((venue.city, venue.state))
+        # Make the list hold only unique values
+        locations = list(dict.fromkeys(locations))
+
+        # Determine the number of upcoming shows per venue
+        upcoming_shows_list = Show().query.filter(Show.start_time > current_datetime)
+        for show in upcoming_shows_list:
+            upcoming_shows[show.venue_id] += 1
+
+        # Add all of the locations to data
+        for location in locations:
+            data.append(
+                {
+                    "city": location[0],
+                    "state": location[1],
+                    "venues": list(defaultdict())
+                }
+            )
+
+        # Iterate through venues to match them to their locations
+        for venue in venues_list:
+            for i, location in enumerate(locations):
+                # If the location matches, add venue data to that location record
+                if data[i]['city'] == venue.city and data[i]['state'] == venue.state:
+                    data[i]['venues'].append(
+                        {
+                            'id': venue.id,
+                            'name': venue.name,
+                            'num_upcoming_shows': upcoming_shows[venue.id]
+                        }
+                    )
+        print(data)
     except:
         error = True
-        db.session.rollback()
-        print(sys.exc_info())
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
     finally:
         db.session.close()
     if error:
         abort(500)
     else:
         return render_template('pages/venues.html', areas=data)
-    # data = [{
-    #     "city": "San Francisco",
-    #     "state": "CA",
-    #     "venues": [{
-    #         "id": 1,
-    #         "name": "The Musical Hop",
-    #         "num_upcoming_shows": 0,
-    #     }, {
-    #         "id": 3,
-    #         "name": "Park Square Live Music & Coffee",
-    #         "num_upcoming_shows": 1,
-    #     }]
-    # }, {
-    #     "city": "New York",
-    #     "state": "NY",
-    #     "venues": [{
-    #         "id": 2,
-    #         "name": "The Dueling Pianos Bar",
-    #         "num_upcoming_shows": 0,
-    #     }]
-    # }]
-    # return render_template('pages/venues.html', areas=data);
 
 
 @app.route('/venues/search', methods=['POST'])
