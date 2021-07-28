@@ -30,6 +30,12 @@ migrate = Migrate(app, db)
 # ----------------------------------------------------------------------------#
 # Models.
 # ----------------------------------------------------------------------------#
+shows_association = db.Table('shows_association',
+                             db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
+                             )
+
+
 class Venue(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Venue'
@@ -46,6 +52,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.String(120), nullable=False)
+    shows = db.relationship('Artist', secondary=shows_association, back_populates="shows")
 
 
 class Artist(db.Model):
@@ -63,14 +70,19 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
+    shows = db.relationship('Venue', secondary=shows_association, back_populates="shows")
+
+
+class Show(db.Model):
+    __tablename__ = 'Show'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, nullable=False)
+    venue_id = db.Column(db.Integer, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-shows_association = db.Table('Show',
-                             db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
-                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
-                             db.Column('start_time', db.DateTime, nullable=False)
-                             )
 
 
 # ----------------------------------------------------------------------------#
@@ -285,7 +297,6 @@ def create_venue_submission():
             seeking_description=form.seeking_description.data,
             genres=form.genres.data
         )
-        response['venue_id'] = venue.id
         response['venue_name'] = venue.name
         response['venue_city'] = venue.city
         response['venue_state'] = venue.state
@@ -625,13 +636,36 @@ def create_shows():
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
-
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
+    error = False
+    response = {}
+    try:
+        form = ShowForm()
+        show = Show(
+            artist_id=form.artist_id.data,
+            venue_id=form.venue_id.data,
+            start_time=form.start_time.data
+        )
+        artist = Artist().query.get(form.artist_id.data)
+        venue = Venue().query.get(form.venue_id.data)
+        artist.shows = show
+        venue.shows = show
+        response['show_artist'] = artist.id
+        response['show_venue'] = venue.id
+        response['show_start_time'] = show.start_time
+        db.session.add(show, artist, venue)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+        flash('An error occurred. Show could not be listed.')
+    if error:
+        abort(500)
+    else:
+        # on successful db insert, flash success
+        flash('Show was successfully listed!')
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        return render_template('pages/home.html')
 
 
 @app.errorhandler(404)
