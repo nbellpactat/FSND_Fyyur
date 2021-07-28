@@ -3,6 +3,8 @@
 # ----------------------------------------------------------------------------#
 
 import json
+import sys
+
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, jsonify, abort
@@ -43,6 +45,7 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
+    genres = db.Column(db.String(120))
 
 
 class Artist(db.Model):
@@ -63,7 +66,6 @@ class Artist(db.Model):
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
 
 # ----------------------------------------------------------------------------#
 # Filters.
@@ -249,14 +251,36 @@ def create_venue_submission():
     response = {}
     try:
         form = VenueForm()
+        venue = Venue(
+            name=form.name.data,
+            city=form.city.data,
+            state=form.state.data,
+            address=form.address.data,
+            phone=form.phone.data,
+            image_link=form.image_link.data,
+            facebook_link=form.facebook_link.data,
+            website=form.website_link.data,
+            seeking_talent=form.seeking_talent.data,
+            seeking_description=form.seeking_description.data,
+            genres=form.genres.data
+        )
+        response['venue_id'] = venue.id
+        response['venue_name'] = venue.name
+        response['venue_city'] = venue.city
+        response['venue_state'] = venue.state
+        response['venue_address'] = venue.address
+        db.session.add(venue)
+        db.session.commit()
     except:
-      pass
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
     finally:
-      db.session.close()
+        db.session.close()
     if error:
-      abort(500)
+        abort(500)
     else:
-      return jsonify(response)
+        return jsonify(response)
 
     # on successful db insert, flash success
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
