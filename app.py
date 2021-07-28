@@ -32,7 +32,8 @@ migrate = Migrate(app, db)
 # ----------------------------------------------------------------------------#
 shows_association = db.Table('shows_association',
                              db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
-                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
+                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
+                             db.Column('start_time', db.DateTime, nullable=False)
                              )
 
 
@@ -52,7 +53,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.String(120), nullable=False)
-    shows = db.relationship('Artist', secondary=shows_association, back_populates="shows")
+    shows = db.relationship('Artist', secondary=shows_association, backref=db.backref('show_venue_id', lazy=True))
 
 
 class Artist(db.Model):
@@ -70,21 +71,10 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Venue', secondary=shows_association, back_populates="shows")
-
-
-class Show(db.Model):
-    __tablename__ = 'Show'
-
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, nullable=False)
-    venue_id = db.Column(db.Integer, nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
+    shows = db.relationship('Venue', secondary=shows_association, backref=db.backref('show_artist_id', lazy=True))
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
-
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
@@ -639,21 +629,27 @@ def create_show_submission():
     error = False
     response = {}
     try:
+        # Create the Show
         form = ShowForm()
         show = Show(
             artist_id=form.artist_id.data,
             venue_id=form.venue_id.data,
             start_time=form.start_time.data
         )
+        # Commit the show to the DB to retrieve its ID
+        db.session.add(show)
+        db.session.commit()
+
         artist = Artist().query.get(form.artist_id.data)
         venue = Venue().query.get(form.venue_id.data)
-        artist.shows = show
-        venue.shows = show
+        artist.shows = [show]
+        venue.shows = [show]
+        db.session.add(artist, venue)
+        db.session.commit()
+
         response['show_artist'] = artist.id
         response['show_venue'] = venue.id
         response['show_start_time'] = show.start_time
-        db.session.add(show, artist, venue)
-        db.session.commit()
     except:
         error = True
         db.session.rollback()
