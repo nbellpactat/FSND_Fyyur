@@ -26,14 +26,18 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-
 # ----------------------------------------------------------------------------#
 # Models.
 # ----------------------------------------------------------------------------#
-shows_association = db.Table('shows_association',
-                             db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
-                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
-                             )
+artist_shows_association = db.Table('artist_shows_association',
+                                    db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+                                    db.Column('show_id', db.Integer, db.ForeignKey('Show.id'), primary_key=True)
+                                    )
+
+venue_shows_association = db.Table('venue_shows_association',
+                                   db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
+                                   db.Column('show_id', db.Integer, db.ForeignKey('Show.id'), primary_key=True)
+                                   )
 
 
 class Venue(db.Model):
@@ -52,7 +56,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.String(120), nullable=False)
-    shows = db.relationship('Show', secondary=shows_association, backref=db.backref('show_ids', lazy=True))
+    shows = db.relationship('Show', secondary=venue_shows_association, backref=db.backref('venue', lazy=True))
 
 
 class Artist(db.Model):
@@ -70,7 +74,7 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Show', secondary=shows_association, backref=db.backref('show_ids', lazy=True))
+    shows = db.relationship('Show', secondary=artist_shows_association, backref=db.backref('artist', lazy=True))
 
 
 class Show(db.Model):
@@ -339,7 +343,7 @@ def delete_venue(venue_id):
         error = True
         db.session.rollback()
         print(sys.exc_info())
-        flash(f"Something went wrong when deleting Venue {response['venue_name']}, with id: {response['venue_id']}..." )
+        flash(f"Something went wrong when deleting Venue {response['venue_name']}, with id: {response['venue_id']}...")
     finally:
         db.session.close()
     if error:
@@ -347,7 +351,6 @@ def delete_venue(venue_id):
     else:
         flash(f"Successfully deleted Venue: {response['venue_name']}!")
     return render_template('pages/home.html')
-
 
     # TODO: BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
