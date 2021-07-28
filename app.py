@@ -286,7 +286,7 @@ def create_venue_submission():
     except:
         error = True
         db.session.rollback()
-        flash('An error occurred. Venue ' + venue.name + ' could not be listed.')
+        flash('An error occurred. Venue ' + response['venue_name'] + ' could not be listed.')
         print(sys.exc_info())
     finally:
         db.session.close()
@@ -294,9 +294,12 @@ def create_venue_submission():
         abort(500)
     else:
         print(response)
-        # on successful db insert, flash success
-        flash('Venue ' + venue.name + ' was successfully listed!')
-        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        try:
+            # on successful db insert, flash success
+            flash('Venue ' + response['venue_name'] + ' was successfully listed!')
+            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        except:
+            flash('Something went wrong! Venue saved to database...')
         return render_template('pages/home.html')
 
 
@@ -496,12 +499,45 @@ def create_artist_submission():
     # called upon submitting the new artist listing form
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
-
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-    return render_template('pages/home.html')
+    error = False
+    response = {}
+    try:
+        form = ArtistForm()
+        artist = Artist(
+            name=form.name.data,
+            city=form.city.data,
+            state=form.state.data,
+            phone=form.phone.data,
+            genres=form.genres.data,
+            image_link=form.image_link.data,
+            facebook_link=form.facebook_link.data,
+            website=form.website_link.data,
+            seeking_venue=form.seeking_venue.data,
+            seeking_description=form.seeking_description.data
+        )
+        response['artist_name'] = artist.name
+        response['artist_city'] = artist.city
+        response['artist_state'] = artist.state
+        response['artist_genres'] = artist.genres
+        db.session.add(artist)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+        flash('An error occurred. Artist ' + response['artist_name'] + ' could not be listed.')
+    finally:
+        db.session.close()
+    if error:
+        abort(500)
+    else:
+        print(response)
+        try:
+            # on successful db insert, flash success
+            flash('Artist ' + request.form['name'] + ' was successfully listed!')
+        except:
+            flash('Something went wrong! Venue saved to database...')
+        return render_template('pages/home.html')
 
 
 #  Shows
