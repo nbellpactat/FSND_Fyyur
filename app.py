@@ -24,14 +24,10 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
 # ----------------------------------------------------------------------------#
 # Models.
 # ----------------------------------------------------------------------------#
-shows = db.Table('Show',
-                 db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
-                 db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True))
-
-
 class Venue(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Venue'
@@ -47,7 +43,6 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    show = db.relationship('Artist', secondary=shows, backref=db.backref('show_artists'), lazy=True)
 
 
 class Artist(db.Model):
@@ -250,6 +245,18 @@ def create_venue_form():
 def create_venue_submission():
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
+    error = False
+    response = {}
+    try:
+        form = VenueForm()
+    except:
+      pass
+    finally:
+      db.session.close()
+    if error:
+      abort(500)
+    else:
+      return jsonify(response)
 
     # on successful db insert, flash success
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
