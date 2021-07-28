@@ -66,6 +66,12 @@ class Artist(db.Model):
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+shows_association = db.Table('Show',
+                             db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
+                             db.Column('start_time', db.DateTime, nullable=False)
+                             )
+
 
 # ----------------------------------------------------------------------------#
 # Filters.
