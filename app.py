@@ -32,8 +32,7 @@ migrate = Migrate(app, db)
 # ----------------------------------------------------------------------------#
 shows_association = db.Table('shows_association',
                              db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
-                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
-                             db.Column('start_time', db.DateTime, nullable=False)
+                             db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
                              )
 
 
@@ -53,7 +52,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.String(120), nullable=False)
-    shows = db.relationship('Artist', secondary=shows_association, backref=db.backref('show_venue_id', lazy=True))
+    shows = db.relationship('Show', secondary=shows_association, backref=db.backref('show_ids', lazy=True))
 
 
 class Artist(db.Model):
@@ -71,10 +70,21 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Venue', secondary=shows_association, backref=db.backref('show_artist_id', lazy=True))
+    shows = db.relationship('Show', secondary=shows_association, backref=db.backref('show_ids', lazy=True))
+
+
+class Show(db.Model):
+    __tablename__ = 'Show'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, nullable=False)
+    venue_id = db.Column(db.Integer, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
