@@ -158,20 +158,24 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
+    # TODO: Implement past and future show logic
     error = False
     response = {}
     try:
-        pass
+        venue = Venue().query.get(venue_id)
+        response['venue_id'] = venue.id
+        response['venue_name'] = venue.name
     except:
-        pass
-    finally:
-        db.session.close()
+        error = True
+        print(sys.exc_info())
+        flash(f'Something went wrong! Could not find Venue with id: {venue_id}...')
     if error:
         abort(500)
     else:
-        return render_template('pages/show_venue.html', venue=data)
+        print(response)
+        return render_template('pages/show_venue.html', venue=venue)
 
+    # TODO: Put the below data into the database
     # data1 = {
     #     "id": 1,
     #     "name": "The Musical Hop",
