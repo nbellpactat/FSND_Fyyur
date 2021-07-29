@@ -1,7 +1,18 @@
+import re
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, AnyOf, URL
+
+
+# Define a custom validator for phone number regular expressions
+def validate_phone_regex(phone):
+    # Valid phone numbers can be:
+    # XXXXXXXXXX
+    # XXX-XXX-XXXX
+    # XXX XXX XXXX
+    accepted_regex = re.compile('^\(?([0-9]{3})\)?[- ]?([0-9]{3})[- ]?([0-9]{4})$')
+    return accepted_regex.match(phone)
 
 
 class ShowForm(Form):
@@ -191,7 +202,7 @@ class ArtistForm(Form):
     )
     phone = StringField(
         # TODO implement validation logic for state
-        'phone'
+        'phone', validators=[validate_phone_regex()]
     )
     image_link = StringField(
         'image_link'
