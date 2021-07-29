@@ -387,7 +387,7 @@ def create_venue_submission():
         error = True
         db.session.rollback()
         flash('An error occurred. Venue ' + response['venue_name'] + ' could not be listed.')
-        print(sys.exc_info())
+        error_line_number()
     finally:
         db.session.close()
     if error:
@@ -417,7 +417,7 @@ def delete_venue(venue_id):
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
+        error_line_number()
         flash(f"Something went wrong when deleting Venue {response['venue_name']}, with id: {response['venue_id']}...")
     finally:
         db.session.close()
@@ -486,7 +486,6 @@ def show_artist(artist_id):
 
         # For each Artist id, build the data and appent it to the data object
         for artist in artists_list:
-            print(artist.name)
             # Get the data for this artist's past and upcoming shows
             past_shows_list = Show().query.filter(
                 Show.artist_id == artist.id,
@@ -626,22 +625,40 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
-    return render_template('forms/edit_artist.html', form=form, artist=artist)
+    error = False
+    data = defaultdict
+    try:
+        form = ArtistForm()
+        artist = Artist().query.get(artist_id)
+        artist.update().values(form)
+        db.session.add(artist)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+    if error:
+        abort(500)
+        error_line_number()
+    else:
+        return render_template('forms/edit_artist.html', form=form, artist=artist)
+    # form = ArtistForm()
+    # artist = {
+    #     "id": 4,
+    #     "name": "Guns N Petals",
+    #     "genres": ["Rock n Roll"],
+    #     "city": "San Francisco",
+    #     "state": "CA",
+    #     "phone": "326-123-5000",
+    #     "website": "https://www.gunsnpetalsband.com",
+    #     "facebook_link": "https://www.facebook.com/GunsNPetals",
+    #     "seeking_venue": True,
+    #     "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
+    #     "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
+    # }
+    # # TODO: populate form with fields from artist with ID <artist_id>
+    # return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -793,7 +810,7 @@ def create_show_submission():
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
+        error_line_number()
         flash('An error occurred. Show could not be listed.')
     if error:
         abort(500)
