@@ -620,7 +620,6 @@ def show_artist(artist_id):
     # data = list(filter(lambda d: d['id'] == artist_id, [data1, data2, data3]))[0]
 
 
-
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
