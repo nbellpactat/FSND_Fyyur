@@ -18,6 +18,13 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 
+
+# Debugging Functions
+def error_line_number():
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    return print(exc_type, fname, exc_tb.tb_lineno)
+
 # ----------------------------------------------------------------------------#
 # App Config.
 # ----------------------------------------------------------------------------#
@@ -109,6 +116,7 @@ def index():
 def venues():
     error = False
     data = []
+    # Dictionary mapping venue_id to num_upcoming_shows
     upcoming_shows = defaultdict(int)
     current_datetime = datetime.now()
     try:
@@ -149,12 +157,9 @@ def venues():
                             'num_upcoming_shows': upcoming_shows[venue.id]
                         }
                     )
-        print(data)
     except:
         error = True
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        error_line_number()
     finally:
         db.session.close()
     if error:
@@ -186,21 +191,85 @@ def show_venue(venue_id):
     # TODO: Implement past and future show logic
     error = False
     response = {}
+    current_datetime = datetime.now()
+    past_shows = []
+    past_shows_count = 0
+    upcoming_shows = []
+    upcoming_shows_count = 0
     try:
+        # Get the information about the Venue
         venue = Venue().query.get(venue_id)
+
+        # Determine the number of upcoming shows for the venue_id
+        upcoming_shows_list = Show().query.filter(
+            Show.venue_id == venue_id,
+            Show.start_time > current_datetime
+        )
+
+        # Determine the number of past shows for the venue_id
+        past_shows_list = Show().query.filter(
+            Show.venue_id == venue_id,
+            Show.start_time < current_datetime
+        )
+
+        # Build the Artist info for the upcoming shows at this venue_id
+        for show in upcoming_shows_list:
+            artist = Artist().query.get(show.artist_id)
+            upcoming_shows.append(
+                {
+                    "artist_id": artist.id,
+                    "artist_name": artist.name,
+                    "artist_image_link": artist.image_link,
+                    "start_time": show.start_time
+                }
+            )
+            upcoming_shows_count += 1
+
+        # Build the Artist info for the past shows at this venue_id
+        for show in past_shows_list:
+            artist = Artist().query.get(show.artist_id)
+            past_shows.append(
+                {
+                    "artist_id": artist.id,
+                    "artist_name": artist.name,
+                    "artist_image_link": artist.image_link,
+                    "start_time": show.start_time
+                }
+            )
+            past_shows_count += 1
+
+        # Build the data object of the venue
+        data = {
+            "id": venue.id,
+            "name": venue.name,
+            "genres": venue.genres,
+            "address": venue.address,
+            "city": venue.city,
+            "state": venue.state,
+            "phone": venue.phone,
+            "website": venue.website,
+            "facebook_link": venue.facebook_link,
+            "seeking_talent": venue.seeking_talent,
+            "seeking_description": venue.seeking_description,
+            "image_link": venue.image_link,
+            "past_shows": past_shows,
+            "upcoming_shows": upcoming_shows,
+            "past_shows_count": past_shows_count,
+            "upcoming_shows_count": upcoming_shows_count
+        }
+
         response['venue_id'] = venue.id
         response['venue_name'] = venue.name
     except:
         error = True
-        print(sys.exc_info())
+        error_line_number()
         flash(f'Something went wrong! Could not find Venue with id: {venue_id}...')
     if error:
         abort(500)
     else:
         print(response)
-        return render_template('pages/show_venue.html', venue=venue)
+        return render_template('pages/show_venue.html', venue=data)
 
-    # TODO: Put the below data into the database
     # data1 = {
     #     "id": 1,
     #     "name": "The Musical Hop",
