@@ -202,7 +202,7 @@ class ArtistForm(Form):
     )
     phone = StringField(
         # TODO implement validation logic for state
-        'phone', validators=[validate_phone_regex()]
+        'phone'
     )
     image_link = StringField(
         'image_link'

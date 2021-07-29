@@ -25,6 +25,7 @@ def error_line_number():
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     return print(exc_type, fname, exc_tb.tb_lineno)
 
+
 # ----------------------------------------------------------------------------#
 # App Config.
 # ----------------------------------------------------------------------------#
@@ -34,6 +35,7 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
 
 # ----------------------------------------------------------------------------#
 # Models.
@@ -53,6 +55,19 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
     genres = db.Column(db.ARRAY(db.String(120)), nullable=False)
+    errors = []
+
+    def validate(self):
+        validation = Form.validate(self)
+        # Return False if validation returns as False
+        if not validation:
+            return validation
+        # Return False if validate_phone_regex returns False
+        elif not validate_phone_regex(self.phone):
+            self.errors.append("Invalid Phone")
+            return validation
+        # Return True if previous checks do not trigger
+        return validation
 
 
 class Artist(db.Model):
@@ -69,6 +84,19 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
+    errors = []
+
+    def validate(self):
+        validation = Form.validate(self)
+        # Return False if validation returns as False
+        if not validation:
+            return validation
+        # Return False if validate_phone_regex returns False
+        elif not validate_phone_regex(self.phone):
+            self.errors.append("Invalid Phone")
+            return validation
+        # Return True if previous checks do not trigger
+        return validation
 
 
 class Show(db.Model):
@@ -445,22 +473,22 @@ def show_artist(artist_id):
                 )
             # Build the data object of the artist information
             data = {
-                    "id": artist.id,
-                    "name": artist.name,
-                    "genres": artist.genres,
-                    "city": artist.city,
-                    "state": artist.state,
-                    "phone": artist.phone,
-                    "website": artist.website,
-                    "facebook_link": artist.facebook_link,
-                    "seeking_venue": artist.seeking_venue,
-                    "seeking_description": artist.seeking_description,
-                    "image_link": artist.image_link,
-                    "past_shows": past_shows,
-                    "upcoming_shows": upcoming_shows,
-                    "past_shows_count": past_shows_count,
-                    "upcoming_shows_count": upcoming_shows_count
-                }
+                "id": artist.id,
+                "name": artist.name,
+                "genres": artist.genres,
+                "city": artist.city,
+                "state": artist.state,
+                "phone": artist.phone,
+                "website": artist.website,
+                "facebook_link": artist.facebook_link,
+                "seeking_venue": artist.seeking_venue,
+                "seeking_description": artist.seeking_description,
+                "image_link": artist.image_link,
+                "past_shows": past_shows,
+                "upcoming_shows": upcoming_shows,
+                "past_shows_count": past_shows_count,
+                "upcoming_shows_count": upcoming_shows_count
+            }
     except:
         error = True
         error_line_number()
