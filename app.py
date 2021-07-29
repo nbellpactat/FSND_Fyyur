@@ -308,8 +308,8 @@ def create_venue_form():
 def create_venue_submission():
     error = False
     response = {}
+    form = VenueForm()
     try:
-        form = VenueForm()
         venue = Venue(
             name=form.name.data,
             city=form.city.data,
@@ -505,8 +505,8 @@ def show_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
     error = False
+    form = ArtistForm()
     try:
-        form = ArtistForm()
         artist = Artist().query.get(artist_id)
     except:
         error = True
@@ -524,8 +524,8 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     # artist record with ID <artist_id> using the new attributes
     error = False
+    form = ArtistForm()
     try:
-        form = ArtistForm()
         artist = Artist().query.get(artist_id)
         artist.name = form.name.data
         artist.city = form.city.data
@@ -554,8 +554,8 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     error = False
+    form = VenueForm()
     try:
-        form = VenueForm()
         venue = Venue().query.get(venue_id)
     except:
         error = True
@@ -572,8 +572,8 @@ def edit_venue(venue_id):
 def edit_venue_submission(venue_id):
     # venue record with ID <venue_id> using the new attributes
     error = False
+    form = VenueForm()
     try:
-        form = VenueForm()
         venue = Venue().query.get(venue_id)
         venue.name = form.name.data
         venue.city = form.city.data
@@ -613,8 +613,8 @@ def create_artist_submission():
     # called upon submitting the new artist listing form
     error = False
     response = {}
+    form = ArtistForm()
     try:
-        form = ArtistForm()
         artist = Artist(
             name=form.name.data,
             city=form.city.data,
@@ -697,8 +697,8 @@ def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     error = False
     response = {}
+    form = ShowForm()
     try:
-        form = ShowForm()
         show = Show(
             artist_id=form.artist_id.data,
             venue_id=form.venue_id.data,
