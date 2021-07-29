@@ -39,7 +39,6 @@ migrate = Migrate(app, db)
 # Models.
 # ----------------------------------------------------------------------------#
 class Venue(db.Model):
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Venue'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -57,7 +56,6 @@ class Venue(db.Model):
 
 
 class Artist(db.Model):
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
     __tablename__ = 'Artist'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -82,9 +80,6 @@ class Show(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     artist = db.relationship('Artist', backref=db.backref('shows', lazy=True))
     venue = db.relationship('Venue', backref=db.backref('shows', lazy=True))
-
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 
 # ----------------------------------------------------------------------------#
@@ -191,7 +186,6 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
-    # TODO: Implement past and future show logic
     error = False
     response = {}
     current_datetime = datetime.now()
@@ -621,8 +615,6 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
     error = False
     response = {}
     try:
@@ -648,7 +640,7 @@ def create_artist_submission():
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
+        error_line_number()
         flash('An error occurred. Artist ' + response['artist_name'] + ' could not be listed.')
     finally:
         db.session.close()
