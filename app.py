@@ -477,7 +477,6 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the artist page with the given artist_id
-    # TODO: replace with real artist data from the artist table, using artist_id
     error = False
     data = defaultdict
     current_datetime = datetime.now()
