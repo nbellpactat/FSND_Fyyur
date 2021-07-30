@@ -170,19 +170,60 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
+    # search for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-    response = {
-        "count": 1,
-        "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }
-    return render_template('pages/search_venues.html', results=response,
-                           search_term=request.form.get('search_term', ''))
+    error = False
+    response = {}
+    # Dictionary mapping venue_id to num_upcoming_shows
+    upcoming_shows = defaultdict(int)
+    current_datetime = datetime.now()
+    try:
+        form_data = request.form.items()
+        search_value = ""
+        for item in form_data:
+            search_value = item[1]
+        search_results = Venue().query.filter(Venue.name.ilike(f'%{search_value}%')).all()
+
+        venue_data = []
+        for venue in search_results:
+
+            # Determine the number of upcoming shows per venue
+            upcoming_shows_list = Show().query.filter(Show.start_time > current_datetime)
+            for show in upcoming_shows_list:
+                upcoming_shows[show.venue_id] += 1
+
+            venue_data.append(
+                {
+                    "id": venue.id,
+                    "name": venue.name,
+                    "num_upcoming_shows": upcoming_shows[venue.id]
+                }
+            )
+        response = {
+            "count": len(search_results),
+            "data": venue_data
+        }
+    except:
+        error = True
+        db.session.rollback()
+        error_line_number()
+    finally:
+        db.session.close()
+    if error:
+        abort(500)
+    else:
+        return render_template('pages/search_venues.html', results=response,
+                               search_term=request.form.get('search_term', ''))
+    # response = {
+    #     "count": 1,
+    #     "data": [{
+    #         "id": 2,
+    #         "name": "The Dueling Pianos Bar",
+    #         "num_upcoming_shows": 0,
+    #     }]
+    # }
+    # return render_template('pages/search_venues.html', results=response,
+    #                        search_term=request.form.get('search_term', ''))
 
 
 @app.route('/venues/<int:venue_id>')
