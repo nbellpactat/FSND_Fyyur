@@ -2,17 +2,21 @@ import re
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms.validators import DataRequired, AnyOf, URL, Optional, ValidationError
 
 
 # Define a custom validator for phone number regular expressions
-def validate_phone_regex(phone):
+def validate_phone(form, field):
     # Valid phone numbers can be:
+    # (XXX)XXXXXXX
+    # (XXX)-XXX-XXXX
+    # (XXX) XXX XXXX
     # XXXXXXXXXX
     # XXX-XXX-XXXX
     # XXX XXX XXXX
-    accepted_regex = re.compile('^\(?([0-9]{3})\)?[- ]?([0-9]{3})[- ]?([0-9]{4})$')
-    return accepted_regex.match(phone)
+    accepted_regex = re.compile('^\\(?([0-9]{3})\\)?[- ]?([0-9]{3})[- ]?([0-9]{4})$')
+    if not accepted_regex.match(str(field.data)):
+        raise ValidationError('Phone number is not in an acceptable format')
 
 
 class ShowForm(Form):
@@ -96,7 +100,7 @@ class VenueForm(Form):
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone'
+        'phone', validators=[validate_phone]
     )
     image_link = StringField(
         'image_link'
@@ -126,7 +130,7 @@ class VenueForm(Form):
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
     )
     website_link = StringField(
         'website_link'
@@ -202,7 +206,7 @@ class ArtistForm(Form):
     )
     phone = StringField(
         # TODO implement validation logic for state
-        'phone'
+        'phone', validators=[validate_phone]
     )
     image_link = StringField(
         'image_link'
@@ -232,7 +236,7 @@ class ArtistForm(Form):
         ]
      )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
      )
 
     website_link = StringField(
