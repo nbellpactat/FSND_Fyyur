@@ -47,5 +47,5 @@ class Show(db.Model):
     artist_id = db.Column(db.ForeignKey('artist.id'), nullable=False)
     venue_id = db.Column(db.ForeignKey('venue.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
-    artist = db.relationship('Artist', backref=db.backref('shows', lazy=True, cascade="all, delete-orphan"))
-    venue = db.relationship('Venue', backref=db.backref('shows', lazy=True, cascade="all, delete-orphan"))
+    artist = db.relationship('Artist', backref=db.backref('shows', lazy="joined", cascade="all, delete-orphan"))
+    venue = db.relationship('Venue', backref=db.backref('shows', lazy="joined", cascade="all, delete-orphan"))
