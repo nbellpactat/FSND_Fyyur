@@ -405,63 +405,41 @@ def show_artist(artist_id):
     error = False
     data = defaultdict
     current_datetime = datetime.now()
+    past_shows = []
+    upcoming_shows = []
     try:
-        # Get a list of all the Artists
-        artists_list = Artist().query.all()
+        # Get a list of all the Artist
+        artist = Artist().query.get(artist_id)
 
-        # For each Artist id, build the data and appent it to the data object
-        for artist in artists_list:
-            # Get the data for this artist's past and upcoming shows
-            past_shows_list = Show().query.filter(
-                Show.artist_id == artist.id,
-                Show.start_time < current_datetime
-            )
-            upcoming_shows_list = Show().query.filter(
-                Show.artist_id == artist.id,
-                Show.start_time > current_datetime
-            )
-            past_shows = []
-            past_shows_count = 0
-            upcoming_shows = []
-            upcoming_shows_count = 0
-            for show in past_shows_list:
-                past_shows_count += 1
-                past_shows.append(
-                    {
-                        "venue_id": show.venue_id,
-                        "venue_name": show.venue.name,
-                        "venue_image_link": show.venue.image_link,
-                        "start_time": show.start_time
-                    }
-                )
-            for show in upcoming_shows_list:
-                upcoming_shows_count += 1
-                upcoming_shows.append(
-                    {
-                        "venue_id": show.venue_id,
-                        "venue_name": show.venue.name,
-                        "venue_image_link": show.venue.image_link,
-                        "start_time": show.start_time
-                    }
-                )
-            # Build the data object of the artist information
-            data = {
-                "id": artist.id,
-                "name": artist.name,
-                "genres": artist.genres,
-                "city": artist.city,
-                "state": artist.state,
-                "phone": artist.phone,
-                "website": artist.website,
-                "facebook_link": artist.facebook_link,
-                "seeking_venue": artist.seeking_venue,
-                "seeking_description": artist.seeking_description,
-                "image_link": artist.image_link,
-                "past_shows": past_shows,
-                "upcoming_shows": upcoming_shows,
-                "past_shows_count": past_shows_count,
-                "upcoming_shows_count": upcoming_shows_count
+        for show in artist.shows:
+            show_data = {
+                "artist_id": show.artist.id,
+                "artist_name": show.artist.name,
+                "artist_image_link": show.artist.image_link,
+                "start_time": show.start_time
             }
+            if show.start_time <= current_datetime:
+                past_shows.append(show_data)
+            else:
+                upcoming_shows.append(show_data)
+        # Build the data object of the artist information
+        data = {
+            "id": artist.id,
+            "name": artist.name,
+            "genres": artist.genres,
+            "city": artist.city,
+            "state": artist.state,
+            "phone": artist.phone,
+            "website": artist.website,
+            "facebook_link": artist.facebook_link,
+            "seeking_venue": artist.seeking_venue,
+            "seeking_description": artist.seeking_description,
+            "image_link": artist.image_link,
+            "past_shows": past_shows,
+            "upcoming_shows": upcoming_shows,
+            "past_shows_count": len(past_shows),
+            "upcoming_shows_count": len(upcoming_shows)
+        }
     except:
         error = True
         error_line_number()
