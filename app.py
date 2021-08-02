@@ -184,50 +184,22 @@ def show_venue(venue_id):
     response = {}
     current_datetime = datetime.now()
     past_shows = []
-    past_shows_count = 0
     upcoming_shows = []
-    upcoming_shows_count = 0
     try:
         # Get the information about the Venue
         venue = Venue().query.get(venue_id)
 
-        # Determine the number of upcoming shows for the venue_id
-        upcoming_shows_list = Show().query.filter(
-            Show.venue_id == venue_id,
-            Show.start_time > current_datetime
-        )
-
-        # Determine the number of past shows for the venue_id
-        past_shows_list = Show().query.filter(
-            Show.venue_id == venue_id,
-            Show.start_time < current_datetime
-        )
-
-        # Build the Artist info for the upcoming shows at this venue_id
-        for show in upcoming_shows_list:
-            artist = Artist().query.get(show.artist_id)
-            upcoming_shows.append(
-                {
-                    "artist_id": artist.id,
-                    "artist_name": artist.name,
-                    "artist_image_link": artist.image_link,
-                    "start_time": show.start_time
-                }
-            )
-            upcoming_shows_count += 1
-
-        # Build the Artist info for the past shows at this venue_id
-        for show in past_shows_list:
-            artist = Artist().query.get(show.artist_id)
-            past_shows.append(
-                {
-                    "artist_id": artist.id,
-                    "artist_name": artist.name,
-                    "artist_image_link": artist.image_link,
-                    "start_time": show.start_time
-                }
-            )
-            past_shows_count += 1
+        for show in venue.shows:
+            show_data = {
+                "artist_id": show.artist.id,
+                "artist_name": show.artist.name,
+                "artist_image_link": show.artist.image_link,
+                "start_time": show.start_time
+            }
+            if show.start_time <= current_datetime:
+                past_shows.append(show_data)
+            else:
+                upcoming_shows.append(show_data)
 
         # Build the data object of the venue
         data = {
@@ -245,8 +217,8 @@ def show_venue(venue_id):
             "image_link": venue.image_link,
             "past_shows": past_shows,
             "upcoming_shows": upcoming_shows,
-            "past_shows_count": past_shows_count,
-            "upcoming_shows_count": upcoming_shows_count
+            "past_shows_count": len(past_shows),
+            "upcoming_shows_count": len(upcoming_shows)
         }
 
         response['venue_id'] = venue.id
