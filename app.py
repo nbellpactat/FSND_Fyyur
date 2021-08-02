@@ -19,9 +19,11 @@ from flask import (
     url_for,
     abort
 )
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_moment import Moment
 
+import models
 from forms import *
 from models import db, Artist, Show, Venue
 
@@ -36,7 +38,6 @@ def error_line_number():
 # ----------------------------------------------------------------------------#
 # App Config.
 # ----------------------------------------------------------------------------#
-
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
@@ -650,7 +651,7 @@ def create_artist_submission():
             error = True
             db.session.rollback()
             error_line_number()
-            flash('An error occurred. Artist ' + response['artist_name'] + ' could not be listed.')
+            flash('An error occurred. Artist not created.')
         finally:
             db.session.close()
         if error:
