@@ -1,9 +1,9 @@
 import re
 from datetime import datetime
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
-from wtforms.validators import DataRequired, AnyOf, URL, Optional, ValidationError
-
+from wtforms.validators import DataRequired, URL, Optional, ValidationError
 
 # Reference Variables
 state_choices = [
