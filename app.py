@@ -19,9 +19,9 @@ from flask import (
     url_for,
     abort
 )
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_moment import Moment
+from flask_wtf import CSRFProtect
 
 import models
 from forms import *
@@ -43,6 +43,7 @@ moment = Moment(app)
 app.config.from_object('config')
 db.init_app(app)
 migrate = Migrate(app, db)
+csrf.init_app(app)
 
 
 # ----------------------------------------------------------------------------#
@@ -238,7 +239,7 @@ def show_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
-    form = VenueForm(meta={"csrf": False})
+    form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
 
@@ -246,7 +247,7 @@ def create_venue_form():
 def create_venue_submission():
     error = False
     response = {}
-    form = VenueForm(meta={"csrf": False})
+    form = VenueForm()
     if form.validate():
         try:
             venue = Venue()
@@ -539,7 +540,7 @@ def edit_venue_submission(venue_id):
 
 @app.route('/artists/create', methods=['GET'])
 def create_artist_form():
-    form = ArtistForm(meta={"csrf": False})
+    form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
 
@@ -548,7 +549,7 @@ def create_artist_submission():
     # called upon submitting the new artist listing form
     error = False
     response = {}
-    form = ArtistForm(meta={"csrf": False})
+    form = ArtistForm()
     if form.validate():
         try:
             artist = Artist()
@@ -617,7 +618,7 @@ def shows():
 @app.route('/shows/create')
 def create_shows():
     # renders form. do not touch.
-    form = ShowForm(meta={"csrf": False})
+    form = ShowForm()
     return render_template('forms/new_show.html', form=form)
 
 
@@ -626,7 +627,7 @@ def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     error = False
     response = {}
-    form = ShowForm(meta={"csrf": False})
+    form = ShowForm()
     if form.validate():
         try:
             show = Show()

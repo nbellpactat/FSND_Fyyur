@@ -1,9 +1,11 @@
 import re
 from datetime import datetime
 
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, URL, Optional, ValidationError
+
+csrf = CSRFProtect()
 
 # Reference Variables
 state_choices = [
