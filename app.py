@@ -249,19 +249,8 @@ def create_venue_submission():
     form = VenueForm(meta={"csrf": False})
     if form.validate():
         try:
-            venue = Venue(
-                name=form.name.data,
-                city=form.city.data,
-                state=form.state.data,
-                address=form.address.data,
-                phone=form.phone.data,
-                image_link=form.image_link.data,
-                facebook_link=form.facebook_link.data,
-                website=form.website_link.data,
-                seeking_talent=form.seeking_talent.data,
-                seeking_description=form.seeking_description.data,
-                genres=form.genres.data
-            )
+            venue = Venue()
+            form.populate_obj(venue)
             response['venue_name'] = venue.name
             response['venue_city'] = venue.city
             response['venue_state'] = venue.state
@@ -479,16 +468,7 @@ def edit_artist_submission(artist_id):
     if form.validate():
         try:
             artist = Artist().query.get(artist_id)
-            artist.name = form.name.data
-            artist.city = form.city.data
-            artist.state = form.state.data
-            artist.phone = form.phone.data
-            artist.genres = form.genres.data
-            artist.image_link = form.image_link.data
-            artist.facebook_link = form.facebook_link.data
-            artist.website = form.website_link.data
-            artist.seeking_venue = form.seeking_venue.data
-            artist.seeking_description = form.seeking_description.data
+            form.populate_obj(artist)
             db.session.add(artist)
             db.session.commit()
         except:
@@ -500,6 +480,7 @@ def edit_artist_submission(artist_id):
             abort(500)
             error_line_number()
         else:
+            flash("Artist updatd!")
             return redirect(url_for('show_artist', artist_id=artist_id))
     else:
         print(form.errors.items())
@@ -533,17 +514,7 @@ def edit_venue_submission(venue_id):
     if form.validate():
         try:
             venue = Venue().query.get(venue_id)
-            venue.name = form.name.data
-            venue.city = form.city.data
-            venue.state = form.state.data
-            venue.address = form.address.data
-            venue.phone = form.phone.data
-            venue.image_link = form.image_link.data
-            venue.facebook_link = form.facebook_link.data
-            venue.website = form.website_link.data
-            venue.seeking_talent = form.seeking_talent.data
-            venue.seeking_description = form.seeking_description.data
-            venue.genres = form.genres.data
+            form.populate_obj(venue)
             db.session.add(venue)
             db.session.commit()
         except:
@@ -554,6 +525,7 @@ def edit_venue_submission(venue_id):
         if error:
             abort(500)
         else:
+            flash("Venue updated!")
             return redirect(url_for('show_venue', venue_id=venue_id))
     else:
         print(form.errors.items())
@@ -579,18 +551,8 @@ def create_artist_submission():
     form = ArtistForm(meta={"csrf": False})
     if form.validate():
         try:
-            artist = Artist(
-                name=form.name.data,
-                city=form.city.data,
-                state=form.state.data,
-                phone=form.phone.data,
-                genres=form.genres.data,
-                image_link=form.image_link.data,
-                facebook_link=form.facebook_link.data,
-                website=form.website_link.data,
-                seeking_venue=form.seeking_venue.data,
-                seeking_description=form.seeking_description.data
-            )
+            artist = Artist()
+            form.populate_obj(artist)
             response['artist_name'] = artist.name
             response['artist_city'] = artist.city
             response['artist_state'] = artist.state
@@ -667,11 +629,8 @@ def create_show_submission():
     form = ShowForm(meta={"csrf": False})
     if form.validate():
         try:
-            show = Show(
-                artist_id=form.artist_id.data,
-                venue_id=form.venue_id.data,
-                start_time=form.start_time.data
-            )
+            show = Show()
+            form.populate_obj(show)
             db.session.add(show)
             db.session.commit()
             response['show_artist'] = form.artist_id.data
